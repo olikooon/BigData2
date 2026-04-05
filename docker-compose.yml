@@ -1,0 +1,55 @@
+services:
+  cluster-master:
+    image: firasj/spark-docker-cluster
+    container_name: cluster-master
+    environment:
+      COMPOSE_SPARK_MASTER: ${COMPOSE_SPARK_MASTER:-local[*]}
+    ports:
+      - "8088:8088"
+      - "4040:4040"
+      - "19888:19888"
+      - "9000:9000"
+      - "9870:9870"
+    volumes:
+      - "./app:/app"
+    networks:
+      - spark-cluster
+    depends_on:
+      - cluster-slave-1
+      - cassandra-server
+    hostname: cluster-master
+    tty: true
+    working_dir: /app
+    # You can comment the entrypoint to run the script manually inside the container
+    entrypoint: 
+      - bash
+      - /app/app.sh
+    
+  cluster-slave-1:
+    image: firasj/spark-docker-cluster
+    container_name: cluster-slave-1
+    networks:
+      - spark-cluster
+    hostname: cluster-slave-1
+    tty: true
+  # cluster-slave-2:
+  #   image: firasj/spark-docker-cluster
+  #   container_name: cluster-slave-2
+  #   networks:
+  #     - spark-cluster
+  #   depends_on:
+  #     - cluster-slave-1
+  #   hostname: cluster-slave-2
+  #   tty: true
+  cassandra-server:
+    image: cassandra
+    container_name: cassandra-server
+    ports:
+      - "7000:7000"
+    networks:
+      - spark-cluster
+    
+
+networks:
+  spark-cluster:
+    driver: bridge
